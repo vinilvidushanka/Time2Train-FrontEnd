@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #f8fafc;
+    --text-main: #1e293b;
+    --card-bg: #ffffff;
+    --card-border: #e2e8f0;
+    --input-bg: #f1f5f9;
+    --modal-overlay: rgba(15, 23, 42, 0.6);
+  }
+
+  .dark {
+    --bg-main: #0b0f1a;
+    --text-main: #f8fafc;
+    --card-bg: #161b2a;
+    --card-border: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.03);
+    --modal-overlay: rgba(0, 0, 0, 0.8);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    @apply transition-colors duration-300 font-sans;
+  }
+}
+
+/* Custom Utility classes to use our variables */
+.bg-custom-card { background-color: var(--card-bg); }
+.border-custom-border { border-color: var(--card-border); }
+.text-custom-main { color: var(--text-main); }
+.bg-custom-input { background-color: var(--input-bg); }
