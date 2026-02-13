@@ -9,6 +9,7 @@ export const useStationStore = defineStore('station', {
     pagination: null as any,
     loading: false,
     error: null as string | null,
+    allStationsForDropdown: [] as any[],
   }),
 
   actions: {
@@ -57,6 +58,32 @@ export const useStationStore = defineStore('station', {
     } catch (err) {
         throw err;
     }
+    },
+
+    async fetchAllStations() {
+      try {
+        const response = await axios.get('/stations?all=true', {
+          headers: { 'Authorization': `Bearer ${getToken()}` }
+        });
+        
+        if (response.data.success) {
+          const resData = response.data.data;
+
+          // මෙතනදී අපි check කරනවා එන දත්ත කෙලින්ම Array එකක්ද කියලා.
+          // 1. Array එකක් නම් (all=true නිසා) -> කෙලින්ම assign කරනවා.
+          // 2. Paginated object එකක් නම් -> resData.data ඇතුළේ ඇති Array එක ගන්නවා.
+          if (Array.isArray(resData)) {
+            this.allStationsForDropdown = resData;
+          } else if (resData && Array.isArray(resData.data)) {
+            this.allStationsForDropdown = resData.data;
+          } else {
+            this.allStationsForDropdown = [];
+          }
+        }
+      } catch (err) {
+        this.allStationsForDropdown = [];
+        console.error('Fetch all stations error:', err);
+      }
     },
 
     async deleteStation(id: number) {

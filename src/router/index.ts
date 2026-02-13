@@ -58,7 +58,34 @@ const router = createRouter({
       name: 'super-admin-trains',
       component: () => import('../views/super-admin/trains/TrainsView.vue'),
       meta: { role: 'super_admin', requiresAuth: true }
-    }
+    },
+
+    // --- Super Admin - Route Management ---
+    {
+      path: '/super-admin/routes',
+      component: () => import('../views/super-admin/routes/RouteLayout.vue'),
+      children: [
+        {
+          path: '', // empty path එකෙන් කරන්නේ කෙලින්ම Table එක පෙන්වන එක
+          name: 'super-admin-routes',
+          component: () => import('../views/super-admin/routes/RouteTable.vue'),
+        }
+      ]
+    },
+
+    // --- Super Admin - Journey Management ---
+    {
+      path: '/super-admin/journeys',
+      component: () => import('../views/super-admin/journey/JourneyLayout.vue'),
+      meta: { role: 'super_admin', requiresAuth: true },
+      children: [
+        {
+          path: '', // Default view එක විදියට Table එක පෙන්වනවා
+          name: 'super-admin-journeys',
+          component: () => import('../views/super-admin/journey/JourneyTable.vue'),
+        }
+      ]
+    },
   ],
 })
 

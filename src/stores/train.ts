@@ -26,6 +26,7 @@ export const useTrainStore = defineStore('train', {
     pagination: null as Pagination | null,
     loading: false,
     error: null as string | null,
+    allTrainsForDropdown: [] as Train[],
   }),
 
   getters: {
@@ -116,6 +117,27 @@ export const useTrainStore = defineStore('train', {
       } catch (err: any) {
         throw err
       }
-    }
+    },
+
+    async fetchAllTrains() {
+      this.loading = true;
+      try {
+        // Laravel වලින් pagination නැතුව ඔක්කොම ගන්න නම් සාමාන්‍යයෙන් ?all=true වගේ query එකක් යවන්න ඕනේ
+        // නැත්නම් Backend එකේ paginate අයින් කරන්න ඕනේ.
+        const response = await axios.get('/trains?all=true'); 
+        
+        const data = response.data.data || response.data;
+        
+        // මෙන්න මෙතනයි වැදගත්ම දේ:
+        this.trains = data; // Layout එකේ computed trains වලට දත්ත ලැබෙන්නේ මෙතනින්
+        this.allTrainsForDropdown = data;
+        
+      } catch (err: any) {
+        console.error("Fetch All Trains Error:", err);
+        this.error = 'Failed to load trains';
+      } finally {
+        this.loading = false;
+      }
+    },
   }
 })

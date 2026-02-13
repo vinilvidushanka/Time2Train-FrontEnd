@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-8 p-6">
     <div class="flex justify-between items-end text-left">
-      <div>
-        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase italic leading-none">Railway Stations</h2>
+      <div class="space-y-3">
+        <div class="flex items-center gap-4 text-left">
+            <div class="w-3 h-10 bg-blue-600 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)]"></div>
+            <h1 class="text-4xl md:text-5xl font-black text-custom-main tracking-tighter uppercase italic leading-none">
+              Railway <span class="text-blue-600">Stations</span>
+            </h1>
+          </div>
         <p class="text-slate-500 text-sm font-medium italic mt-2">Control center for network hubs</p>
       </div>
       <div class="flex gap-3">
