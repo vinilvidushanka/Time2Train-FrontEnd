@@ -23,7 +23,7 @@ defineEmits(['toggleTheme', 'logout'])
         <nav v-if="!isAdmin" class="nav-links">
           <RouterLink to="/" class="pill-link">Home</RouterLink>
           <RouterLink to="/about" class="pill-link">About</RouterLink>
-          <RouterLink to="/search" class="pill-link">Schedules</RouterLink>
+          <RouterLink to="/schedules" class="pill-link">Schedules</RouterLink>
           <RouterLink to="/contact" class="pill-link">Contact</RouterLink>
         </nav>
         <div v-else class="admin-indicator">

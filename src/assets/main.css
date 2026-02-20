@@ -2,43 +2,28 @@
 
 @layer base {
   :root {
-    /* Main Layout Colors - Light Mode */
-    --color-bg: #f1f5f9;        /* Slate 100 - වඩාත් හොඳ contrast එකක් සඳහා */
-    --color-surface: #ffffff;   /* Pure White */
-    --color-text-main: #1e293b; /* Slate 800 */
-    --color-text-muted: #475569;/* Slate 600 */
-    --color-border: #cbd5e1;    /* Slate 300 */
-    --color-input-bg: #f1f5f9;  
-    --modal-overlay: rgba(15, 23, 42, 0.6);
-
-    /* Sidebar - Ice Blue Theme */
-    --sidebar-bg: #f0f7ff;
-    --sidebar-border: #e0eefe;
-    --logo-text: #0f172a;
-
-    /* Dashboard Specific */
-    --dash-accent: #2563eb;     
-    --dash-stat-bg: #9eceff;
+    /* Light Mode Palette */
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-text-main: #0e172b;
+    --color-text-muted: #64748b;
+    --color-border: #e2e8f0;
+    --color-input-bg: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --dropdown-bg: #ffffff;
+    --shadow-main: 0 20px 50px -12px rgba(15, 23, 42, 0.1);
   }
 
   .dark {
-    /* Main Layout Colors - Dark Mode */
-    --color-bg: #030712;        
-    --color-surface: #0f172a;   
-    --color-text-main: #f8fafc; 
+    /* Dark Mode Palette */
+    --color-bg: #030712;
+    --color-surface: #0f172a;
+    --color-text-main: #f8fafc;
     --color-text-muted: #94a3b8;
     --color-border: rgba(255, 255, 255, 0.05);
     --color-input-bg: rgba(255, 255, 255, 0.03);
-    --modal-overlay: rgba(0, 0, 0, 0.8);
-
-    /* Sidebar */
-    --sidebar-bg: #0b0f1a;
-    --sidebar-border: rgba(255, 255, 255, 0.05);
-    --logo-text: #f8fafc;
-
-    /* Dashboard Specific */
-    --dash-accent: #38bdf8;     
-    --dash-stat-bg:  #ffffff;
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --dropdown-bg: #0f172a;
   }
 
   body {
@@ -46,26 +31,58 @@
     color: var(--color-text-main);
     @apply transition-colors duration-500 font-sans;
   }
-} /* <--- මෙන්න මේ bracket එක තමයි කලින් missing වෙලා තිබුණේ */
 
-/* Custom Utilities */
-@layer utilities {
-  .bg-surface { background-color: var(--color-surface); }
-  .bg-input { background-color: var(--color-input-bg); }
-  .bg-dash-stat { background-color: var(--dash-stat-bg); }
-  
-  .text-main { color: var(--color-text-main); }
-  .text-muted { color: var(--color-text-muted); }
-  .text-accent { color: var(--dash-accent); }
-  
-  .border-main { border-color: var(--color-border); }
-  
-  .card-shadow {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  /* --- Professional Overrides --- */
+
+  /* Title Color Logic Fix: 
+     මෙහිදී Heading එකට .text-white හෝ .!text-white class එක දී තිබේ නම්, 
+     global text color එක apply නොවන ලෙස සකසා ඇත. එවිට Light mode එකේදී අකුරු සුදු පැහැයෙන්ම පවතී.
+  */
+  h1:not(.text-white):not(.!text-white):not(.text-transparent), 
+  h2:not(.text-white):not(.!text-white), 
+  h3:not(.text-white):not(.!text-white), 
+  h4:not(.text-white):not(.!text-white) {
+    color: var(--color-text-main) !important;
   }
 
-  .sidebar-theme {
-    background-color: var(--sidebar-bg);
-    border-color: var(--sidebar-border);
+  /* Image overlays වල අඳුරු පැහැය ස්ථිර කිරීමට */
+  .from-slate-950, .from-black {
+    --tw-gradient-from: #000000 !important;
+  }
+
+  /* Section Styles: 
+     Hero section එක සහ අනෙකුත් නිල් පාට sections වලට බලපෑමක් නොවන පරිදි සකසා ඇත.
+  */
+  section:not(.bg-blue-600):not(.bg-slate-950):not(.bg-transparent) {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    @apply transition-all duration-300;
+  }
+
+  /* Input Fields Settings */
+  input {
+    background-color: var(--color-input-bg) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-main) !important;
+    @apply transition-all duration-300 outline-none;
+  }
+
+  /* Standard Backdrop Filter for cross-browser compatibility */
+  .backdrop-blur-modern {
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    backdrop-filter: blur(12px) saturate(180%);
+  }
+}
+
+@layer utilities {
+  /* Helper Classes */
+  .bg-surface { background-color: var(--color-surface); }
+  .text-main { color: var(--color-text-main); }
+  .text-muted { color: var(--color-text-muted); }
+  .border-main { border-color: var(--color-border); }
+  
+  /* Custom Shadow for cards */
+  .card-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   }
 }
