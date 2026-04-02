@@ -34,7 +34,8 @@ defineEmits(['logout'])
           { to: '/super-admin/stations', label: 'Stations', icon: '🚉' },
           { to: '/super-admin/trains', label: 'Trains', icon: '🚆' },
           { to: '/super-admin/routes', label: 'Routes', icon: '🛤️' },
-          { to: '/super-admin/journeys', label: 'Journeys', icon: '⏱️' }
+          { to: '/super-admin/journeys', label: 'Journeys', icon: '⏱️' },
+          { to: '/super-admin/live-status', label: 'Live Status', icon: '📡' }
         ]" 
         :key="link.to"
         :to="link.to" 

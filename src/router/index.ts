@@ -86,6 +86,13 @@ const router = createRouter({
         }
       ]
     },
+
+    // --- Super Admin - Live Status ---
+    {
+      path: '/super-admin/live-status',
+      name: 'super-admin-live-status',
+      component: () => import('../views/super-admin/live-status/LiveStatusLayout.vue')
+    },
   ],
 })
 
