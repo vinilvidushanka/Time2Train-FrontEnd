@@ -1,48 +1,82 @@
-# Time2Train-frontend
+# Time2Train Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+A Vue 3 + Vite frontend for the Time2Train administration and user dashboard application.
 
-## Recommended IDE Setup
+## Overview
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+This repository implements a modern Vue 3 application using:
+- Vue 3
+- Vite
+- TypeScript
+- Tailwind CSS
+- Pinia for state management
+- Vue Router for routing
+- Axios for HTTP requests
 
-## Recommended Browser Setup
+The app is organized into role-based views, including super-admin dashboards, user dashboards, scheduling pages, and live status monitoring.
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## Setup
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Install dependencies:
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+Start the development server:
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Build for production:
 
 ```sh
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+Preview the production build locally:
+
+```sh
+npm run preview
+```
+
+Run linting and auto-fix problems:
 
 ```sh
 npm run lint
 ```
+
+Format source files:
+
+```sh
+npm run format
+```
+
+## Project Structure
+
+- `src/main.ts` - application entry point
+- `src/App.vue` - root application component
+- `src/router/index.ts` - Vue Router configuration
+- `src/stores/` - Pinia stores for auth, journeys, routes, stations, trains, schedules, etc.
+- `src/views/` - page views grouped by feature and role
+  - `super-admin/` - admin dashboards and management screens
+  - `user/` - user-facing dashboard and schedules
+- `src/components/` - reusable UI components and layout elements
+- `src/assets/` - global styles and assets
+
+## Requirements
+
+- Node.js 20.19.0 or later
+- npm
+
+## Recommended Tools
+
+- VS Code with [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+- ESLint and Prettier extensions for consistent formatting and linting
+
+## Notes
+
+- This project is configured as a private frontend app.
+- Tailwind CSS is enabled through PostCSS and the `@tailwindcss/postcss` plugin.
+- Type checking uses `vue-tsc` to support `.vue` files with TypeScript.
