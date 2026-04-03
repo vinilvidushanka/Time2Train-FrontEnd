@@ -9,7 +9,6 @@ const journeyStore = useJourneyStore();
 const trainStore = useTrainStore();
 const stationStore = useStationStore();
 
-// UI States
 const isSubmitting = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -20,31 +19,44 @@ const form = reactive({
   journey_id: null as number | null,
   current_station_id: null as number | null,
   actual_departure: '',
+  status_date: new Date().toISOString().substr(0, 10)
 });
 
-// Data Fetching
+// Data Fetching - Auth Token එක අවශ්‍ය බව මතක තබා ගන්න
 onMounted(async () => {
-  await Promise.all([
-    journeyStore.fetchJourneys(),
-    trainStore.fetchAllTrains(), 
-    stationStore.fetchAllStations()
-  ]);
+  try {
+    await Promise.all([
+      journeyStore.fetchJourneys(),
+      trainStore.fetchAllTrains(), 
+      stationStore.fetchAllStations()
+    ]);
+  } catch (error) {
+    console.error("Initial data fetch failed", error);
+  }
 });
 
-// Computeds for Dropdowns
 const trains = computed(() => trainStore.trains);
 const allStations = computed(() => stationStore.allStationsForDropdown);
-const activeJourneys = ref<any[]>([]);
 
-// Filter journeys based on selected train
-watch(() => form.train_id, (newTrainId) => {
-  if (newTrainId) {
-    errorMessage.value = '';
-    activeJourneys.value = journeyStore.journeys.filter(j => j.train_id === newTrainId);
-  } else {
-    activeJourneys.value = [];
-    form.journey_id = null;
-  }
+/**
+ * FIXED: Active Journeys Filter
+ * Backend එකෙන් එන දත්ත Structure එකට අනුව filter එක මෙසේ විය යුතුය.
+ */
+const activeJourneys = computed(() => {
+  if (!form.train_id || !journeyStore.journeys) return [];
+  
+  return journeyStore.journeys.filter(j => {
+    // Laravel එකෙන් train_id හෝ train object එකේ id එක තිබේදැයි බලයි
+    const jTrainId = j.train_id ?? j.train?.id;
+    return Number(jTrainId) === Number(form.train_id);
+  });
+});
+
+// Train වෙනස් කරන විට journey එක reset කරයි
+watch(() => form.train_id, () => {
+  form.journey_id = null;
+  errorMessage.value = '';
+  successMessage.value = '';
 });
 
 const handleSubmit = async () => {
@@ -58,20 +70,26 @@ const handleSubmit = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await axios.post('/api/live-status/update', form);
+    // 1. URL එක නිවැරදි කරන ලදී: 'train-status/update' (ඔබේ php route එකට අනුව)
+    // 2. Token එක ලබා ගන්න (උදා: localStorage හෝ authStore එකෙන්)
+    const token = localStorage.getItem('auth_token'); 
+
+    const response = await axios.post('train-status/update', form, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     
-    if (response.data.success) {
-      successMessage.value = 'Live status updated successfully!';
-      form.actual_departure = ''; 
-    } else {
-      errorMessage.value = response.data.message || 'Failed to update status.';
+    if (response.data) {
+      successMessage.value = "Train status updated successfully! 🚀";
+      form.actual_departure = ''; // Time එක reset කරයි
     }
   } catch (error: any) {
-    console.error("Submission error:", error);
-    if (error.response && error.response.data) {
-        errorMessage.value = error.response.data.message || 'An error occurred.';
+    // 404 හෝ 401 වැරදි පරීක්ෂා කරයි
+    if (error.response?.status === 404) {
+      errorMessage.value = "API route not found. Check if '/api/v1/' is correct in BaseURL.";
     } else {
-        errorMessage.value = 'Failed to connect to the server.';
+      errorMessage.value = error.response?.data?.message || 'Update failed. Please try again.';
     }
   } finally {
     isSubmitting.value = false;
@@ -80,101 +98,72 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="space-y-8 p-6 animate-in fade-in duration-700">
-    <div class="flex justify-between items-end text-left">
-      <div class="space-y-3">
-        <div class="flex items-center gap-4 text-left">
-          <div class="w-3 h-10 bg-emerald-600 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)]"></div>
-          <h1 class="text-4xl md:text-5xl font-black text-main tracking-tighter uppercase italic leading-none">
-            Live Status <span class="text-emerald-600">Updater</span>
-          </h1>
-        </div>
-        <p class="text-muted text-sm font-medium italic mt-2">Update real-time departure and calculate delays.</p>
-      </div>
-    </div>
+  <div class="max-w-4xl mx-auto p-6 space-y-10 text-left animate-in fade-in duration-500">
+    <div class="bg-surface rounded-[2.5rem] border border-main p-8 shadow-2xl relative overflow-hidden">
+      
+      <h2 class="text-3xl font-black text-main mb-8 tracking-tighter uppercase italic">
+        Real-time <span class="text-emerald-600">Sync</span>
+      </h2>
 
-    <div class="max-w-3xl mx-auto bg-surface rounded-[2.5rem] shadow-2xl border border-main card-shadow overflow-visible">
-      <div class="p-8">
+      <div v-if="successMessage" class="mb-6 p-4 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded-2xl font-bold">
+        ✅ {{ successMessage }}
+      </div>
+      <div v-if="errorMessage" class="mb-6 p-4 bg-rose-500/10 text-rose-600 border border-rose-500/20 rounded-2xl font-bold">
+        ❌ {{ errorMessage }}
+      </div>
+
+      <form @submit.prevent="handleSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        <div class="flex justify-between items-start mb-10 text-left pb-6 border-b border-main">
-          <div>
-            <h3 class="text-2xl font-black text-main uppercase tracking-tighter flex items-center gap-3">
-              <span class="text-xl">📡</span> Send Real-time Update
-            </h3>
-            <p class="text-muted text-sm font-medium mt-1">Select the train and station to report current departure.</p>
-          </div>
-          <div v-if="isSubmitting" class="text-emerald-500 font-bold text-xs animate-pulse">Syncing...</div>
+        <div class="space-y-2 md:col-span-2">
+          <label class="text-[10px] font-black uppercase text-muted tracking-widest ml-1">Reporting Date</label>
+          <input v-model="form.status_date" type="date" class="w-full bg-input border border-transparent focus:border-emerald-500/50 rounded-2xl px-5 py-4 font-bold text-main outline-none transition-all" />
         </div>
 
-        <div v-if="successMessage" class="mb-6 p-4 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-sm font-bold text-left animate-in fade-in">
-          {{ successMessage }}
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase text-muted tracking-widest ml-1">Select Train</label>
+          <select v-model="form.train_id" class="w-full bg-input border border-transparent rounded-2xl px-5 py-4 font-bold text-main outline-none cursor-pointer appearance-none">
+            <option :value="null" disabled>Choose Train...</option>
+            <option v-for="t in trains" :key="t.id" :value="t.id">{{ t.train_name }} ({{ t.train_number }})</option>
+          </select>
         </div>
-        <div v-if="errorMessage" class="mb-6 p-4 rounded-xl bg-rose-500/10 text-rose-600 border border-rose-500/20 text-sm font-bold text-left animate-in fade-in">
-          {{ errorMessage }}
+
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase text-muted tracking-widest ml-1">Active Journey</label>
+          <select v-model="form.journey_id" :disabled="!form.train_id" class="w-full bg-input border border-transparent rounded-2xl px-5 py-4 font-bold text-main outline-none disabled:opacity-50 appearance-none">
+            <option :value="null" disabled>Select Journey</option>
+            <option v-for="j in activeJourneys" :key="j.id" :value="j.id">
+              #{{ j.id }} | {{ j.route?.from_station?.station_code ?? 'ST' }} ➔ {{ j.route?.to_station?.station_code ?? 'ST' }}
+            </option>
+          </select>
+          <p v-if="form.train_id && activeJourneys.length === 0" class="text-rose-500 text-[10px] font-bold mt-1 uppercase">No journeys found for this train.</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="flex flex-col text-left space-y-8">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            
-            <div class="space-y-2 relative group col-span-2">
-              <label class="text-[10px] font-black uppercase text-muted ml-1 tracking-widest">Select Train</label>
-              <div class="relative">
-                <select v-model="form.train_id" class="w-full bg-input border border-transparent hover:border-emerald-500/30 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-main appearance-none transition-all cursor-pointer text-sm shadow-sm">
-                  <option :value="null" disabled>Choose a train...</option>
-                  <option v-for="train in trains" :key="train.id" :value="train.id">{{ train.train_name }} ({{ train.train_number }})</option>
-                </select>
-                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted group-hover:text-emerald-500 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase text-muted tracking-widest ml-1">Current Station</label>
+          <select v-model="form.current_station_id" class="w-full bg-input border border-transparent rounded-2xl px-5 py-4 font-bold text-main outline-none appearance-none">
+            <option :value="null" disabled>Select Station</option>
+            <option v-for="s in allStations" :key="s.id" :value="s.id">{{ s.station_name }}</option>
+          </select>
+        </div>
 
-            <div class="space-y-2 relative group">
-              <label class="text-[10px] font-black uppercase text-muted ml-1 tracking-widest">Active Journey</label>
-              <div class="relative">
-                <select v-model="form.journey_id" :disabled="!form.train_id" class="w-full bg-input border border-transparent hover:border-emerald-500/30 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-main appearance-none transition-all cursor-pointer text-sm shadow-sm disabled:opacity-60">
-                  <option :value="null" disabled>Select Journey</option>
-                  <option v-for="journey in activeJourneys" :key="journey.id" :value="journey.id">
-                    #{{ journey.train_number }} ({{ journey.route?.from_station?.station_code }} ➔ {{ journey.route?.to_station?.station_code }})
-                  </option>
-                </select>
-                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted group-hover:text-emerald-500">
-                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
-            </div>
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase text-muted tracking-widest ml-1">Actual Departure</label>
+          <input v-model="form.actual_departure" type="time" step="1" class="w-full bg-input border border-transparent rounded-2xl px-5 py-4 font-bold text-main outline-none" required />
+        </div>
 
-            <div class="space-y-2 relative group">
-              <label class="text-[10px] font-black uppercase text-muted ml-1 tracking-widest">Reporting Station</label>
-              <div class="relative">
-                <select v-model="form.current_station_id" class="w-full bg-input border border-transparent hover:border-emerald-500/30 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-main appearance-none transition-all cursor-pointer text-sm shadow-sm">
-                  <option :value="null" disabled>Select Station</option>
-                  <option v-for="station in allStations" :key="station.id" :value="station.id">{{ station.station_name }}</option>
-                </select>
-                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-muted group-hover:text-emerald-500">
-                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-2 col-span-2 border-t border-main pt-6">
-              <label class="text-[10px] font-black uppercase text-muted ml-1 tracking-widest">Actual Departure Time</label>
-              <input v-model="form.actual_departure" type="time" step="1" class="w-full bg-input border border-transparent hover:border-emerald-500/30 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold text-main text-sm" required />
-            </div>
-          </div>
-
-          <button :disabled="isSubmitting" type="submit" class="w-full bg-emerald-600 text-white px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.15em] shadow-xl hover:bg-emerald-700 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-3">
-            <span v-if="!isSubmitting">Update Real-Time Status 📡</span>
-            <span v-else class="animate-pulse">Syncing to Server...</span>
+        <div class="md:col-span-2 pt-4">
+          <button :disabled="isSubmitting" type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-5 rounded-2xl uppercase tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+            <span v-if="!isSubmitting">Update Status 🚀</span>
+            <span v-else class="animate-pulse flex items-center gap-2">Syncing Data...</span>
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <style scoped>
-.bg-surface { backdrop-filter: blur(16px); }
+.bg-surface { backdrop-filter: blur(16px); background-color: rgba(15, 23, 42, 0.9); }
+.bg-input { background-color: rgba(255, 255, 255, 0.05); }
+select option { background-color: #0f172a; color: white; }
 </style>

@@ -24,24 +24,26 @@ export const useJourneyStore = defineStore('journey', {
   actions: {
     // 1. සියලුම Journeys ලබා ගැනීම
     async fetchJourneys() {
-        this.loading = true;
-        try {
-            const response = await axios.get('/journeys');
-            // මෙතන response.data.data ද බලන්න (Laravel pagination නිසා)
-            this.journeys = response.data.data || response.data; 
-        } catch (err) {
-            this.error = 'Failed to load journeys';
-        } finally {
-            this.loading = false;
-        }
-    },
+  this.loading = true;
+  try {
+    const token = localStorage.getItem('auth_token');
+    const response = await axios.get('journeys', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    this.journeys = response.data.data || response.data;
+    console.log("Journeys Loaded:", this.journeys);
+  } catch (err: any) {
+    this.error = 'Failed to load journeys';
+    console.error("Store Error:", err.response?.data || err.message);
+  } finally {
+    this.loading = false;
+  }
+},
 
-    // 2. අලුත් Journey එකක් ඇතුළත් කිරීම
     async addJourney(payload: Omit<Journey, 'id'>) {
       try {
         const response = await axios.post('/journeys', payload);
-        // අලුතින් ලැබෙන Journey එක state එකට එකතු කරනවා
-        // Backend එකෙන් response එකත් එක්ක Train/Route details එනවා නම් මේක පට්ට
         this.journeys.push(response.data);
         return response.data;
       } catch (err: any) {
